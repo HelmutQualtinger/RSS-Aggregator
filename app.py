@@ -100,8 +100,8 @@ def parse_single_feed(feed_content, feed_text, category_name):
                     date_elem = item.find('pubDate')
                     content_elem = item.find('.//{http://purl.org/rss/1.0/modules/content/}encoded')
 
-                    title = title_elem.text if title_elem is not None else 'Ohne Titel'
-                    link = link_elem.text if link_elem is not None else '#'
+                    title = (title_elem.text or '').strip() if title_elem is not None else 'Ohne Titel'
+                    link = (link_elem.text or '').strip() if link_elem is not None else '#'
                     description = desc_elem.text if desc_elem is not None else ''
                     full_content = content_elem.text if content_elem is not None else description
                     pub_date = date_elem.text if date_elem is not None else ''
@@ -159,8 +159,8 @@ def parse_rss_with_regex(xml_text, category_name):
         date_match = re.search(r'<pubDate[^>]*>([^<]+)</pubDate>', item)
         content_match = re.search(r'<content:encoded[^>]*>([^<]*(?:<[^>]+>[^<]*)*)</content:encoded>', item, re.DOTALL)
 
-        title = title_match.group(1) if title_match else 'Ohne Titel'
-        link = link_match.group(1) if link_match else '#'
+        title = (title_match.group(1) if title_match else 'Ohne Titel').strip()
+        link = (link_match.group(1) if link_match else '#').strip()
         description = desc_match.group(1) if desc_match else ''
         full_content = content_match.group(1) if content_match else description
         pub_date = date_match.group(1) if date_match else ''
@@ -301,6 +301,7 @@ async def get_image(url: str):
     except Exception as e:
         print(f"Error fetching image from {url}: {str(e)}")
         return Response(status_code=404, content=b'')
+
 
 def run_scheduler_loop():
     """Background loop for scheduler."""

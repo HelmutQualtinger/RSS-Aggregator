@@ -4,7 +4,6 @@ services:
   krone-rss:
     build: . # Specifies to build the image from the Dockerfile in the current directory
     container_name: krone-rss
-
     restart: unless-stopped
     networks:
       - reverse-proxy
