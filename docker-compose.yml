@@ -6,4 +6,10 @@ services:
     container_name: rss-aggregator
     restart: unless-stopped
     ports:
-      - "8080:8080" # Map host port 8080 to container port 8080
+      - "8080:8080"
+    networks:
+      - reverse-proxy
+
+networks:
+  reverse-proxy:
+    external: true

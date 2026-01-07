@@ -1,4 +1,7 @@
-from flask import Flask, render_template, jsonify
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from starlette.requests import Request
 import requests
 from datetime import datetime
 import re
@@ -17,7 +20,8 @@ try:
 except ImportError:
     HAS_LXML = False
 
-app = Flask(__name__)
+app = FastAPI(title="RSS Aggregator", version="1.0.0")
+templates = Jinja2Templates(directory="templates")
 
 # Multiple RSS feeds for different categories
 RSS_FEEDS = {
@@ -227,12 +231,12 @@ def format_date(date_string):
 # --- End of existing parsing functions ---
 
 
-@app.route('/')
-def index():
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
     """Render the main page using cached data."""
     with articles_lock:
-        articles_data = latest_articles_data # Copy to avoid holding lock for rendering
-        
+        articles_data = latest_articles_data.copy()
+
     # Group articles by category and limit to 20 per category
     categories = {}
     for cat_name in RSS_FEEDS.keys():
@@ -250,37 +254,50 @@ def index():
         if cat_name in categories and categories[cat_name]: # Only include categories with articles
             sorted_categories.append((cat_name, categories[cat_name]))
 
-    return render_template('index.html', categories=sorted_categories, error=articles_data["error"], articles=articles_data["articles"])
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "categories": sorted_categories,
+            "error": articles_data["error"],
+            "articles": articles_data["articles"]
+        }
+    )
 
-@app.route('/api/articles')
-def get_articles():
+@app.get("/api/articles")
+async def get_articles():
     """API endpoint for articles using cached data."""
     with articles_lock:
-        articles_data = latest_articles_data # Copy to avoid holding lock
-    
-    return jsonify({
+        articles_data = latest_articles_data.copy()
+
+    return {
         'articles': articles_data['articles'],
         'error': articles_data['error'],
         'count': len(articles_data['articles']),
         'last_updated': articles_data['last_updated']
-    })
+    }
 
-def run_scheduler():
-    """Runs the schedule jobs in a loop."""
-    schedule.every(10).minutes.do(refresh_feeds)
-    print("Scheduler started. Next refresh in 10 minutes.")
+def run_scheduler_loop():
+    """Background loop for scheduler."""
     while True:
         schedule.run_pending()
         time.sleep(60) # Check every minute
 
-# Initial fetch of feeds at startup - runs in both development and production (Gunicorn)
-refresh_feeds()
+@app.on_event("startup")
+async def startup_event():
+    """Initialize feeds and start background scheduler on app startup."""
+    print("Starting RSS Aggregator...")
+    # Initial fetch of feeds
+    refresh_feeds()
 
-# Start the scheduler thread - runs in both development and production (Gunicorn)
-scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-scheduler_thread.start()
+    # Setup and start the scheduler
+    schedule.every(10).minutes.do(refresh_feeds)
+    scheduler_thread = threading.Thread(target=run_scheduler_loop, daemon=True)
+    scheduler_thread.start()
+    print("Scheduler started. Next refresh in 10 minutes.")
 
 if __name__ == '__main__':
-    # Run the Flask app (only in development)
+    import uvicorn
+    # Run the FastAPI app (only in development)
     # Use host='0.0.0.0' and port=8080 to match Docker container settings
-    app.run(debug=False, host='0.0.0.0', port=8080)
+    uvicorn.run(app, host='0.0.0.0', port=8080)
