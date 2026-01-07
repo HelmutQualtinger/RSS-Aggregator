@@ -171,18 +171,36 @@ Format: `https://api.krone.at/v1/rss/rssfeed-google.xml?id=FEED_ID`
 
 ## 🎨 Design-System
 
-### CSS Custom Properties
+### Tailwind CSS + Custom CSS
+
+Das Projekt verwendet eine Kombination aus:
+- **Tailwind CSS CDN** - Utility-first CSS Framework für responsive Design
+- **Custom CSS (`static/style.css`)** - Für komplexe Animationen, Gradienten und Dark Mode Styling
+
+#### Tailwind Konfiguration
+```javascript
+tailwind.config = {
+    darkMode: 'class',  // Dark mode aktiviert durch 'dark' Klasse auf <html>
+    theme: {
+        extend: {
+            backdropBlur: {
+                xs: '2px'  // Custom backdrop blur value
+            }
+        }
+    }
+}
+```
+
+#### CSS Custom Properties (in style.css)
 
 ```css
 --bg-light              /* Light Mode Background Gradient */
 --bg-dark               /* Dark Mode Background Gradient */
 --category-color        /* Aktive Kategorie-Farbe */
---text-light           /* Light Mode Text Color */
---text-dark            /* Dark Mode Text Color */
---card-light           /* Light Mode Card Background */
---card-dark            /* Dark Mode Card Background */
---border-light         /* Light Mode Border Color */
---border-dark          /* Dark Mode Border Color */
+--text-dark-mode        /* Dark Mode Text Color (#ffffff) */
+--text-secondary-dark   /* Dark Mode Secondary Text (#b0b0b0) */
+--card-dark             /* Dark Mode Card Background */
+--border-dark           /* Dark Mode Border Color */
 ```
 
 ### Farbpalette

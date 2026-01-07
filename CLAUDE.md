@@ -22,17 +22,28 @@ RSS Aggregator for Kronen Zeitung (Austrian newspaper) - A FastAPI-based web app
     - `GET /api/articles`: JSON API endpoint
   - Auto-generated API documentation at `/docs` (OpenAPI/Swagger)
 
-### Frontend (Jinja2 + Vanilla JS)
+### Frontend (Tailwind CSS + Vanilla JS)
 - **templates/index.html**: Single HTML file containing:
-  - Complete responsive design with CSS (no external stylesheets)
+  - Tailwind CSS CDN for responsive utility-first styling
+  - Tailwind dark mode enabled via `darkMode: 'class'` config
+  - Links to external `static/style.css` for custom styles
   - Modern glassmorphism UI with backdrop-filter effects
   - Dynamic Light/Dark theme with localStorage persistence
   - Category-specific color schemes (8 unique colors per category)
   - Dynamic background gradient that changes per active category
   - Real-time full-text search across entire article content
   - Smooth animations and transitions (cubic-bezier easing)
-  - 5-article responsive grid layout (4 at 1600px, 3 at 1200px, 2 at 800px, 1 at 768px)
+  - 5-column responsive grid layout (5→4→3→2→1 columns based on breakpoints)
   - Tab-based category navigation with animated underlines
+
+- **static/style.css**: Separated custom CSS for complex styles:
+  - CSS custom properties (--text-dark-mode, --category-color, etc.)
+  - Keyframe animations (@keyframes slideDown, fadeInUp, fadeIn)
+  - Dark mode theme overrides (body.dark-theme selectors)
+  - Complex gradients and color mixing
+  - Focus states and transitions
+  - Category-specific color mappings
+  - Responsive media queries for different screen sizes
 
 ## Key Data Flow
 
@@ -106,11 +117,19 @@ Multi-stage Docker build optimizes image size:
 - **Thread Lock**: `articles_lock` (threading.Lock) protects cache access
 - **Scope**: Global in-memory cache (shared across all requests in single process)
 
+### Tailwind CSS & Static Files
+- **Tailwind CDN**: Loaded from CDN for responsive utility-first styling
+- **Dark Mode**: Enabled via `darkMode: 'class'` config (reads `dark` class on `<html>`)
+- **Static Files**: Mounted at `/static` via FastAPI's StaticFiles middleware
+- **Custom CSS**: `static/style.css` loaded via link tag in template
+- **CSS Architecture**: Tailwind utilities for layout + custom CSS for complex styles (animations, gradients, dark overrides)
+
 ### Theming System
-- CSS custom properties (--bg-light, --card-light, etc.) control all colors
-- Dark theme class added to `<body>` for cascade styling
+- CSS custom properties (--text-dark-mode, --category-color, etc.) control all colors
+- Dark theme class added to `<html>` and `<body>` for Tailwind + CSS cascade
 - Theme preference stored in localStorage under key 'theme'
 - Dynamic --category-color updates background gradient on tab clicks
+- Dark mode overrides in `static/style.css` for article cards and search input
 
 ### Search Implementation
 - Real-time filtering without API calls (100% frontend)
