@@ -1,24 +1,31 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
+# Stage 1: Builder
+FROM python:3.9-slim AS builder
 
-# Set the working directory in the container
-WORKDIR /app
+WORKDIR /build
 
-# Copy the requirements file into the container
+# Copy requirements
 COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt using pip
-# Also install gunicorn for a production-ready web server and lxml for XML parsing
-RUN pip install --no-cache-dir -r requirements.txt gunicorn lxml
+# Install all dependencies to a specific directory
+RUN pip install --user --no-cache-dir -r requirements.txt gunicorn lxml
 
-# Copy the current directory contents into the container at /app
+# Stage 2: Runtime
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy Python packages from builder stage
+COPY --from=builder /root/.local /root/.local
+
+# Copy application code
 COPY . .
+
+# Make Python find our installed packages
+ENV PATH=/root/.local/bin:$PATH \
+    PYTHONUNBUFFERED=1
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
-
-# Define environment variable
-ENV NAME World
 
 # Run app.py when the container launches using Gunicorn
 # The Flask app object is named 'app' in app.py
