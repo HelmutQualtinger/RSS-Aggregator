@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request
+import os
 import requests
 from datetime import datetime
 import re
@@ -22,6 +24,10 @@ except ImportError:
 
 app = FastAPI(title="RSS Aggregator", version="1.0.0")
 templates = Jinja2Templates(directory="templates")
+
+# Mount static files directory
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Multiple RSS feeds for different categories
 RSS_FEEDS = {
