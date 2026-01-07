@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  rss-aggregator:
+    build: . # Specifies to build the image from the Dockerfile in the current directory
+    container_name: rss-aggregator
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # Map host port 8080 to container port 8080
