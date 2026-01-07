@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request
@@ -214,7 +214,7 @@ def extract_image(html_content):
         r'<figure[^>]*>.*?<img[^>]+src=["\"]?([^"\'\s>]+)',
     ]
     for pattern in patterns:
-        match = re.search(pattern, html_content, re.IGNORECASE | re.DOTALL)in 
+        match = re.search(pattern, html_content, re.IGNORECASE | re.DOTALL)
         if match:
             url = match.group(1) if match.lastindex else match.group(0)
             if url and url.startswith(('http://', 'https://', '//')): return url
@@ -282,6 +282,25 @@ async def get_articles():
         'count': len(articles_data['articles']),
         'last_updated': articles_data['last_updated']
     }
+
+@app.get("/api/image")
+async def get_image(url: str):
+    """Proxy endpoint for images to bypass CORS issues."""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+
+        return Response(
+            content=response.content,
+            media_type=response.headers.get('content-type', 'image/jpeg'),
+            headers={'Cache-Control': 'public, max-age=86400'}
+        )
+    except Exception as e:
+        print(f"Error fetching image from {url}: {str(e)}")
+        return Response(status_code=404, content=b'')
 
 def run_scheduler_loop():
     """Background loop for scheduler."""

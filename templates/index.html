@@ -88,7 +88,7 @@
                                         <a href="{{ article.link }}" target="_blank" class="article-card bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl overflow-hidden shadow-lg border border-white/30 dark:border-white/25 flex flex-col text-decoration-none cursor-pointer relative transition-all duration-400 hover:shadow-2xl hover:border-white/50" data-full-text="{{ article.title }} {{ article.full_content }}">
                                             <!-- Article Image -->
                                             {% if article.image %}
-                                                <img src="{{ article.image }}" alt="{{ article.title }}" class="article-image w-full h-40 object-cover transition-transform duration-500" onerror="this.style.display='none'">
+                                                <img src="/api/image?url={{ article.image|urlencode }}" alt="{{ article.title }}" class="article-image w-full h-40 object-cover transition-transform duration-500" onerror="this.style.display='none'">
                                             {% else %}
                                                 <div class="article-image placeholder w-full h-40 flex items-center justify-center text-5xl">📄</div>
                                             {% endif %}

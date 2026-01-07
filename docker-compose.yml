@@ -4,9 +4,9 @@ services:
   krone-rss:
     build: . # Specifies to build the image from the Dockerfile in the current directory
     container_name: krone-rss
-    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8084:8080" # Maps port 8080 of the host to port 8080 of the container
+    restart: unless-stopped
     networks:
       - reverse-proxy
 
