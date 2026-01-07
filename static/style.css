@@ -122,8 +122,14 @@ body::before {
     box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
 }
 
+body.dark-theme .article-card {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
 body.dark-theme .article-card:hover {
     box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+    border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 .article-card::before {
@@ -189,12 +195,13 @@ body.dark-theme .article-meta {
 }
 
 body.dark-theme .search-input {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff;
 }
 
 body.dark-theme .search-input::placeholder {
-    color: #7a7a7a;
+    color: #a0a0a0;
 }
 
 .search-input:focus {
