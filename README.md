@@ -2,8 +2,8 @@
 
 Ein modernes, interaktives Webanwendung zur Anzeige von RSS-Feeds der Kronen Zeitung (österreichische Zeitung) mit fortgeschrittenen Funktionen wie Live-Suche, Light/Dark Theme und dynamischen Kategorie-Farben.
 
-![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)
-![Flask Version](https://img.shields.io/badge/flask-2.3.2-green.svg)
+![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)
+![FastAPI Version](https://img.shields.io/badge/fastapi-0.109.0-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## ✨ Features
@@ -77,18 +77,22 @@ http://localhost:8080
 ## 📋 Dependencies
 
 ```
-Flask==2.3.2          # Web Framework
+fastapi==0.109.0      # Modern ASGI Web Framework
+uvicorn==0.25.0       # ASGI Server
 requests==2.31.0      # HTTP Library
-Werkzeug==2.3.6       # WSGI Utilities
-lxml                  # XML Parser (optional, aber empfohlen)
+schedule==1.2.2       # Background Task Scheduler
+jinja2==3.1.3         # Template Engine
+lxml==6.0.2           # XML Parser
 ```
 
 ## 🏗️ Projektstruktur
 
 ```
 RSS-Aggregator/
-├── app.py                    # Flask Backend (RSS-Parsing, API)
+├── app.py                    # FastAPI Backend (RSS-Parsing, API, Scheduling)
 ├── requirements.txt          # Python Dependencies
+├── Dockerfile               # Multi-stage Docker build configuration
+├── docker-compose.yml       # Docker Compose for container orchestration
 ├── templates/
 │   └── index.html           # Frontend (HTML + CSS + JS)
 ├── README.md                # Diese Datei
@@ -222,32 +226,43 @@ Das Projekt präsentiert:
 
 ## 🚢 Deployment
 
-### Mit Docker
-```dockerfile
-FROM python:3.12
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "app.py"]
-```
-
-### Mit Gunicorn (Production)
+### Mit Docker (Recommended)
 ```bash
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:8080 app:app
+# Build und starte mit Docker Compose
+docker-compose up --build -d
+
+# Oder mit einzelnem Docker-Befehl
+docker build -t rss-aggregator .
+docker run -p 8080:8080 rss-aggregator
 ```
 
-### Mit Heroku
-1. Erstelle `Procfile`:
-```
-web: gunicorn app:app
-```
+Das Projekt verwendet **Multi-Stage Docker Build** für optimale Image-Größe:
+- Stage 1 (Builder): Installiert alle Dependencies
+- Stage 2 (Runtime): Kopiert nur notwendige Packages
+- Result: ~250MB statt 600MB+ Image
 
-2. Deploye:
+### Mit Uvicorn (Production)
 ```bash
-git push heroku main
+# Starte mit Uvicorn direkt
+uvicorn app:app --host 0.0.0.0 --port 8080
+
+# Mit mehreren Workers (Single Worker empfohlen für In-Memory Cache)
+uvicorn app:app --host 0.0.0.0 --port 8080 --workers 1
 ```
+
+### Mit Docker Compose + Reverse Proxy
+```bash
+# Externe reverse-proxy Network erstellen
+docker network create reverse-proxy
+
+# Container in reverse-proxy Network starten
+docker-compose up -d
+```
+
+Der Container verbindet sich mit der externen `reverse-proxy` Netzwerk:
+- Hostname: `rss-aggregator`
+- Port: `8080`
+- Erreichbar von anderen Containern im Netzwerk
 
 ## 📊 Performance
 
@@ -284,7 +299,8 @@ Erstellt mit ❤️ für Nachrichten-Aggregation
 ## 🙏 Danksagungen
 
 - [Kronen Zeitung](https://www.krone.at/) für die öffentlichen RSS-Feeds
-- [Flask](https://flask.palletsprojects.com/) für das Web-Framework
+- [FastAPI](https://fastapi.tiangolo.com/) für das moderne ASGI Web-Framework
+- [Uvicorn](https://www.uvicorn.org/) für den ASGI Server
 - [lxml](https://lxml.de/) für robustes XML-Parsing
 
 ## 📧 Support

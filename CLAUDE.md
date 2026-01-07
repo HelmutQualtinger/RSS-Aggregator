@@ -4,21 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RSS Aggregator for Kronen Zeitung (Austrian newspaper) - A Flask-based web application that fetches and displays RSS feeds from multiple news categories in an interactive, modern web interface with Light/Dark theme support.
+RSS Aggregator for Kronen Zeitung (Austrian newspaper) - A FastAPI-based web application that fetches and displays RSS feeds from multiple news categories in an interactive, modern web interface with Light/Dark theme support.
 
 ## Architecture
 
-### Backend (Flask)
-- **app.py**: Single Flask application file containing:
+### Backend (FastAPI + Uvicorn)
+- **app.py**: Single FastAPI application file containing:
   - RSS feed fetching and parsing logic
   - Multi-parser support: lxml (preferred) with fallback to regex-based parsing for malformed XML
   - Article extraction from multiple Kronen Zeitung RSS feeds (8 categories)
   - Full content extraction (`content:encoded` elements) for search indexing
   - Image extraction from multiple sources (description HTML, media:content, media:thumbnail, enclosures)
   - HTML cleaning and date formatting utilities
+  - Background scheduler: Runs `refresh_feeds()` every 10 minutes via `@app.on_event("startup")`
   - Two main routes:
     - `GET /`: Renders main page with articles grouped and limited (max 20 per category)
     - `GET /api/articles`: JSON API endpoint
+  - Auto-generated API documentation at `/docs` (OpenAPI/Swagger)
 
 ### Frontend (Jinja2 + Vanilla JS)
 - **templates/index.html**: Single HTML file containing:
@@ -54,6 +56,7 @@ To add/modify feeds, update the `RSS_FEEDS` dictionary in app.py and add corresp
 
 ## Running the Application
 
+### Development
 ```bash
 # Install dependencies
 pip3 install -r requirements.txt
@@ -62,9 +65,46 @@ pip3 install -r requirements.txt
 python3 app.py
 ```
 
-Server runs at `http://localhost:8080` with Flask debug mode enabled (hot reload on file changes).
+Server runs at `http://localhost:8080`. Uvicorn supports auto-reload on file changes.
+
+API documentation available at `http://localhost:8080/docs` (interactive Swagger UI).
+
+### Production (Docker)
+```bash
+# Build and run with Docker Compose
+docker-compose up --build -d
+
+# View logs
+docker-compose logs -f rss-aggregator
+```
+
+Multi-stage Docker build optimizes image size:
+- Stage 1: Build dependencies (~600MB intermediate)
+- Stage 2: Runtime only (~250MB final image)
 
 ## Development Notes
+
+### Background Scheduler (FastAPI Startup Event)
+- **Trigger**: `@app.on_event("startup")` - Runs when application starts
+- **Behavior**:
+  - Initial RSS feed fetch on startup
+  - Background daemon thread starts scheduler loop
+  - Scheduler runs `refresh_feeds()` every 10 minutes
+  - Scheduler checks every 60 seconds for pending tasks
+- **Thread Safety**: Uses `threading.Lock()` to protect shared `latest_articles_data` dict
+- **Note**: Single worker recommended (in-memory cache doesn't support multi-worker scenario)
+
+### Data Caching
+- **Global Cache**: `latest_articles_data` dictionary with the following structure:
+  ```python
+  {
+    "articles": [...],      # List of all fetched articles
+    "error": None,          # Error message if fetch failed
+    "last_updated": "ISO8601_TIMESTAMP"
+  }
+  ```
+- **Thread Lock**: `articles_lock` (threading.Lock) protects cache access
+- **Scope**: Global in-memory cache (shared across all requests in single process)
 
 ### Theming System
 - CSS custom properties (--bg-light, --card-light, etc.) control all colors
@@ -107,4 +147,34 @@ Requires modern browser (Chrome 76+, Firefox 94+, Safari 15+).
 
 ## Port Configuration
 
-Application runs on port 8080 (port 5000 was used by AirPlay on this system). To change, modify the port parameter in `app.run()` at the end of app.py.
+Application runs on port **8080** by default. To change:
+
+### Development
+Edit `uvicorn.run()` call at the end of app.py:
+```python
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=8080)  # Change port here
+```
+
+### Docker
+Update `docker-compose.yml`:
+```yaml
+ports:
+  - "8080:8080"  # Change first number to desired host port
+```
+
+## Reverse Proxy Integration
+
+The container is configured to work with external reverse-proxy networks:
+
+- **Network**: `reverse-proxy` (external, bridge driver)
+- **Hostname**: `rss-aggregator` (resolvable within network)
+- **Port**: `8080` (internal port)
+- **Setup**: Network must be created before container starts:
+  ```bash
+  docker network create reverse-proxy
+  docker-compose up -d
+  ```
+
+This allows other containers (nginx, traefik, etc.) to route traffic to `http://rss-aggregator:8080`.
