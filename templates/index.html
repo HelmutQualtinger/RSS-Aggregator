@@ -74,7 +74,7 @@
                 <!-- Tab Content -->
                 <div class="category-section bg-white/95 dark:bg-slate-950/95 backdrop-blur-md rounded-b-3xl px-8 py-8 shadow-lg border border-white/30 dark:border-white/25 dark:border-t-0 transition-all duration-300">
                     {% for category_name, category_articles in categories %}
-                        <div class="tab-content {% if loop.first %}active{% endif %} hidden" data-category-content="{{ loop.index0 }}">
+                        <div class="tab-content {% if loop.first %}active{% endif %}" data-category-content="{{ loop.index0 }}">
                             {% if category_articles %}
                                 <!-- Articles Grid -->
                                 <div class="articles-grid grid gap-5 mb-8">

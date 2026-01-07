@@ -267,6 +267,11 @@ body.dark-theme .tab-button:hover {
 
 /* Tab Content Animation */
 .tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
     animation: fadeIn 0.3s ease;
 }
 
