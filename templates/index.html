@@ -32,9 +32,29 @@
 
     <div class="container mx-auto max-w-7xl relative z-10 px-4">
         <!-- Header -->
-        <div class="header text-center mb-12 py-8">
-            <h1 class="text-5xl md:text-6xl font-black mb-4 text-white">📰 Kronen Zeitung</h1>
-            <p class="text-xl md:text-2xl text-white font-medium">Aktuelle Nachrichten und Artikel</p>
+        <div class="header mb-12 py-8">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <!-- Title and Subtitle -->
+                <div class="flex-1">
+                    <h1 class="text-5xl md:text-6xl font-black text-white"><img src="static/krone.svg" alt="Krone Logo" style="display: inline-block; vertical-align: middle; margin-right: 8px; width: 30px; height: 30px;"> Kronen Zeitung</h1>
+                    <p class="text-xl md:text-2xl text-white font-medium">Aktuelle Nachrichten und Artikel</p>
+                </div>
+
+                <!-- Search Bar (moved to header) -->
+                <div class="w-full lg:w-80 flex-shrink-0">
+                    <input
+                        type="text"
+                        id="search-input"
+                        class="search-input w-full px-4 py-2 text-sm border-2 border-blue-200 rounded-xl transition-all duration-300 dark:bg-slate-800 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900"
+                        placeholder="🔍 Artikel durchsuchen..."
+                    >
+                </div>
+
+                <!-- Article Count -->
+                <div class="text-white text-lg font-semibold opacity-90 whitespace-nowrap">
+                    <span id="header-article-count">{{ articles|length }} Artikel</span>
+                </div>
+            </div>
         </div>
 
         {% if error %}
@@ -43,22 +63,7 @@
                 ❌ {{ error }}
             </div>
         {% else %}
-            <!-- Search Bar -->
-            <div class="search-container mb-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl p-5 shadow-lg border border-white/30 dark:border-white/25 transition-all duration-300">
-                <input
-                    type="text"
-                    id="search-input"
-                    class="search-input w-full px-5 py-3 text-base border-2 border-blue-200 rounded-xl transition-all duration-300 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900"
-                    placeholder="🔍 Artikel durchsuchen..."
-                >
-            </div>
-
             {% if categories %}
-                <!-- Article Count -->
-                <div class="article-count text-center text-white mb-8 text-lg opacity-90">
-                    {{ articles|length }} Artikel gefunden
-                </div>
-
                 <!-- Tabs Navigation -->
                 <div class="tabs-container bg-white/95 dark:bg-slate-950/95 backdrop-blur-md rounded-t-3xl shadow-lg border border-white/30 dark:border-white/25 overflow-x-auto transition-all duration-300">
                     <ul class="tabs flex list-none p-0 m-0">
@@ -182,6 +187,8 @@
 
         // Search functionality
         const searchInput = document.getElementById('search-input');
+        const totalArticleCount = document.querySelectorAll('.article-card').length;
+
         if (searchInput) {
             searchInput.addEventListener('input', function(e) {
                 const searchTerm = e.target.value.toLowerCase();
@@ -207,7 +214,7 @@
                         noResultsMsg.id = 'no-results-msg';
                         noResultsMsg.className = 'no-results text-center py-10 text-gray-500 dark:text-gray-400 text-lg';
                         noResultsMsg.textContent = 'Keine Artikel gefunden für "' + e.target.value + '"';
-                        searchInput.parentElement.appendChild(noResultsMsg);
+                        document.querySelector('.category-section').appendChild(noResultsMsg);
                     } else {
                         noResultsMsg.textContent = 'Keine Artikel gefunden für "' + e.target.value + '"';
                         noResultsMsg.style.display = 'block';

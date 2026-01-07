@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  rss-aggregator:
+  krone-rss:
     build: . # Specifies to build the image from the Dockerfile in the current directory
-    container_name: rss-aggregator
+    container_name: krone-rss
     restart: unless-stopped
     ports:
       - "8080:8080"

@@ -214,7 +214,7 @@ def extract_image(html_content):
         r'<figure[^>]*>.*?<img[^>]+src=["\"]?([^"\'\s>]+)',
     ]
     for pattern in patterns:
-        match = re.search(pattern, html_content, re.IGNORECASE | re.DOTALL)
+        match = re.search(pattern, html_content, re.IGNORECASE | re.DOTALL)in 
         if match:
             url = match.group(1) if match.lastindex else match.group(0)
             if url and url.startswith(('http://', 'https://', '//')): return url
