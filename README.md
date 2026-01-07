@@ -94,7 +94,9 @@ RSS-Aggregator/
 ├── Dockerfile               # Multi-stage Docker build configuration
 ├── docker-compose.yml       # Docker Compose for container orchestration
 ├── templates/
-│   └── index.html           # Frontend (HTML + CSS + JS)
+│   └── index.html           # Frontend (Tailwind CSS + Vanilla JS)
+├── static/
+│   └── style.css            # Custom styles (animations, dark mode, gradients)
 ├── README.md                # Diese Datei
 └── CLAUDE.md                # Entwickler-Dokumentation
 ```
@@ -149,7 +151,8 @@ Bearbeite am Ende von `app.py`:
 
 ```python
 if __name__ == '__main__':
-    app.run(debug=True, port=8080)  # PORT hier ändern
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=8080)  # PORT hier ändern
 ```
 
 ## 🌐 RSS-Feed-IDs
