@@ -45,6 +45,8 @@ RSS_FEEDS = {
 latest_articles_data = {"articles": [], "error": None, "last_updated": None}
 articles_lock = threading.Lock() # To ensure thread-safe access to latest_articles_data
 
+MAX_ARTICLES_PER_CATEGORY = 40 # Keep only as many articles per category as are ever displayed
+
 def parse_rss_feed_logic():
     """Fetch and parse all RSS feeds. This is the core logic."""
     all_articles = []
@@ -72,10 +74,23 @@ def parse_rss_feed_logic():
     else:
         return all_articles, None
 
+def limit_articles_per_category(articles):
+    """Keep only the first MAX_ARTICLES_PER_CATEGORY articles per category, discarding the rest
+    so they don't sit unused in memory (they are never shown or returned to clients)."""
+    counts = {}
+    limited = []
+    for article in articles:
+        cat = article.get('category', 'Top-News')
+        if counts.get(cat, 0) < MAX_ARTICLES_PER_CATEGORY:
+            limited.append(article)
+            counts[cat] = counts.get(cat, 0) + 1
+    return limited
+
 def refresh_feeds():
     """Fetches and parses RSS feeds, then updates the global cache."""
     print("Refreshing RSS feeds...")
     articles, error = parse_rss_feed_logic()
+    articles = limit_articles_per_category(articles)
     with articles_lock:
         latest_articles_data["articles"] = articles
         latest_articles_data["error"] = error
@@ -243,14 +258,14 @@ async def index(request: Request):
     with articles_lock:
         articles_data = latest_articles_data.copy()
 
-    # Group articles by category and limit to 20 per category
+    # Group articles by category and limit to MAX_ARTICLES_PER_CATEGORY per category
     categories = {}
     for cat_name in RSS_FEEDS.keys():
         categories[cat_name] = []
 
     for article in articles_data["articles"]:
         cat = article.get('category', 'Top-News')
-        if cat in categories and len(categories[cat]) < 20:
+        if cat in categories and len(categories[cat]) < MAX_ARTICLES_PER_CATEGORY:
             categories[cat].append(article)
 
     # Sort categories in custom order
